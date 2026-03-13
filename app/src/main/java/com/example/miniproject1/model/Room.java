@@ -1,6 +1,8 @@
 package com.example.miniproject1.model;
 
-public class Room {
+import java.io.Serializable;
+
+public class Room implements Serializable {
     private String roomId;
     private String roomName;
     private double price;

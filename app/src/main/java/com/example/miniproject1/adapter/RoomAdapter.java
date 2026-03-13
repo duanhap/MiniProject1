@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,9 +18,11 @@ import java.util.List;
 public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder> {
 
     private final List<Room> roomList;
+    private final OnRoomActionListener listener;
 
-    public RoomAdapter(List<Room> roomList) {
+    public RoomAdapter(List<Room> roomList, OnRoomActionListener listener) {
         this.roomList = roomList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -45,6 +48,20 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
         } else {
             holder.tvStatus.setTextColor(Color.BLACK);
         }
+
+        holder.btnDelete.setOnClickListener(v -> {
+            int adapterPosition = holder.getBindingAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION && listener != null) {
+                listener.onDeleteClick(adapterPosition);
+            }
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            int adapterPosition = holder.getBindingAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION && listener != null) {
+                listener.onItemClick(adapterPosition);
+            }
+        });
     }
 
     @Override
@@ -56,12 +73,20 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
         TextView tvRoomName;
         TextView tvPrice;
         TextView tvStatus;
+        Button btnDelete;
 
         public RoomViewHolder(@NonNull View itemView) {
             super(itemView);
             tvRoomName = itemView.findViewById(R.id.tvRoomName);
             tvPrice = itemView.findViewById(R.id.tvPrice);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
+    }
+
+    public interface OnRoomActionListener {
+        void onDeleteClick(int position);
+
+        void onItemClick(int position);
     }
 }
