@@ -13,16 +13,44 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.miniproject1.R;
 import com.example.miniproject1.model.Room;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder> {
 
-    private final List<Room> roomList;
+    private List<Room> roomListAll;
+    private final List<Room> roomListFiltered;
     private final OnRoomActionListener listener;
+    private String currentQuery = "";
 
     public RoomAdapter(List<Room> roomList, OnRoomActionListener listener) {
-        this.roomList = roomList;
+        this.roomListAll = new ArrayList<>(roomList);
+        this.roomListFiltered = new ArrayList<>(roomList);
         this.listener = listener;
+    }
+
+    public void updateData(List<Room> newList) {
+        this.roomListAll = new ArrayList<>(newList);
+        filter(currentQuery);
+    }
+
+    public void filter(String query) {
+        currentQuery = (query == null) ? "" : query;
+        roomListFiltered.clear();
+
+        if (currentQuery.trim().isEmpty()) {
+            roomListFiltered.addAll(roomListAll);
+        } else {
+            String lowerQuery = currentQuery.toLowerCase().trim();
+            for (Room room : roomListAll) {
+                if (room.getRoomName().toLowerCase().contains(lowerQuery)
+                        || room.getRoomId().toLowerCase().contains(lowerQuery)
+                        || room.getTenantName().toLowerCase().contains(lowerQuery)) {
+                    roomListFiltered.add(room);
+                }
+            }
+        }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -34,7 +62,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull RoomViewHolder holder, int position) {
-        Room room = roomList.get(position);
+        Room room = roomListFiltered.get(position);
 
         holder.tvRoomName.setText(room.getRoomName());
         holder.tvPrice.setText(String.valueOf(room.getPrice()));
@@ -50,23 +78,21 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
         }
 
         holder.btnDelete.setOnClickListener(v -> {
-            int adapterPosition = holder.getBindingAdapterPosition();
-            if (adapterPosition != RecyclerView.NO_POSITION && listener != null) {
-                listener.onDeleteClick(adapterPosition);
+            if (listener != null) {
+                listener.onDeleteClick(room);
             }
         });
 
         holder.itemView.setOnClickListener(v -> {
-            int adapterPosition = holder.getBindingAdapterPosition();
-            if (adapterPosition != RecyclerView.NO_POSITION && listener != null) {
-                listener.onItemClick(adapterPosition);
+            if (listener != null) {
+                listener.onItemClick(room);
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return roomList == null ? 0 : roomList.size();
+        return roomListFiltered.size();
     }
 
     public static class RoomViewHolder extends RecyclerView.ViewHolder {
@@ -85,8 +111,8 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
     }
 
     public interface OnRoomActionListener {
-        void onDeleteClick(int position);
+        void onDeleteClick(Room room);
 
-        void onItemClick(int position);
+        void onItemClick(Room room);
     }
 }

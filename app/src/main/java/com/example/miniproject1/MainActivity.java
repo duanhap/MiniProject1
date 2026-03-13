@@ -2,6 +2,9 @@ package com.example.miniproject1;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements RoomAdapter.OnRoo
 
     private final List<Room> roomList = new ArrayList<>();
     private RoomAdapter roomAdapter;
+    private EditText edtSearch;
     private ActivityResultLauncher<Intent> addEditRoomLauncher;
 
     @Override
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements RoomAdapter.OnRoo
 
         initResultLauncher();
         initRecyclerView();
+        initSearch();
         initFab();
         seedInitialData();
     }
@@ -62,13 +67,12 @@ public class MainActivity extends AppCompatActivity implements RoomAdapter.OnRoo
 
                     if (position >= 0 && position < roomList.size()) {
                         roomList.set(position, room);
-                        roomAdapter.notifyDataSetChanged();
                         Toast.makeText(this, "Đã cập nhật phòng", Toast.LENGTH_SHORT).show();
                     } else {
                         roomList.add(room);
-                        roomAdapter.notifyItemInserted(roomList.size() - 1);
                         Toast.makeText(this, "Đã thêm phòng", Toast.LENGTH_SHORT).show();
                     }
+                    roomAdapter.updateData(roomList);
                 }
         );
     }
@@ -78,6 +82,24 @@ public class MainActivity extends AppCompatActivity implements RoomAdapter.OnRoo
         recyclerViewRooms.setLayoutManager(new LinearLayoutManager(this));
         roomAdapter = new RoomAdapter(roomList, this);
         recyclerViewRooms.setAdapter(roomAdapter);
+    }
+
+    private void initSearch() {
+        edtSearch = findViewById(R.id.edtSearch);
+        edtSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                roomAdapter.filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
     }
 
     private void initFab() {
@@ -92,21 +114,22 @@ public class MainActivity extends AppCompatActivity implements RoomAdapter.OnRoo
         roomList.add(new Room("P101", "Phòng 101", 2500000, "Còn trống", "", ""));
         roomList.add(new Room("P102", "Phòng 102", 2800000, "Đã thuê", "Nguyễn Văn A", "0909000001"));
         roomList.add(new Room("P103", "Phòng 103", 3000000, "Còn trống", "", ""));
-        roomAdapter.notifyDataSetChanged();
+        roomAdapter.updateData(roomList);
     }
 
     @Override
-    public void onDeleteClick(int position) {
-        if (position < 0 || position >= roomList.size()) {
+    public void onDeleteClick(Room room) {
+        int index = roomList.indexOf(room);
+        if (index < 0) {
             return;
         }
 
         new AlertDialog.Builder(this)
                 .setTitle("Xác nhận xóa")
-                .setMessage("Bạn có chắc muốn xóa phòng này?")
+                .setMessage("Bạn có chắc muốn xóa " + room.getRoomName() + "?")
                 .setPositiveButton("YES", (dialog, which) -> {
-                    roomList.remove(position);
-                    roomAdapter.notifyItemRemoved(position);
+                    roomList.remove(room);
+                    roomAdapter.updateData(roomList);
                     Toast.makeText(MainActivity.this, "Đã xóa phòng", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("NO", null)
@@ -114,14 +137,15 @@ public class MainActivity extends AppCompatActivity implements RoomAdapter.OnRoo
     }
 
     @Override
-    public void onItemClick(int position) {
-        if (position < 0 || position >= roomList.size()) {
+    public void onItemClick(Room room) {
+        int index = roomList.indexOf(room);
+        if (index < 0) {
             return;
         }
 
         Intent intent = new Intent(this, AddEditRoomActivity.class);
-        intent.putExtra(AddEditRoomActivity.EXTRA_ROOM, roomList.get(position));
-        intent.putExtra(AddEditRoomActivity.EXTRA_POSITION, position);
+        intent.putExtra(AddEditRoomActivity.EXTRA_ROOM, room);
+        intent.putExtra(AddEditRoomActivity.EXTRA_POSITION, index);
         addEditRoomLauncher.launch(intent);
     }
 }
