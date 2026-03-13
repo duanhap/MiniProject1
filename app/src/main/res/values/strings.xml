@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MiniProject1</string>
+    <string-array name="room_status_array">
+        <item>Còn trống</item>
+        <item>Đã thuê</item>
+    </string-array>
 </resources>
